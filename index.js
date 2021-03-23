@@ -17,14 +17,6 @@ async function loadQuestions() {
           value: "VIEW_EMPLOYEES",
         },
         {
-          name: "View All Employees By Department",
-          value: "VIEW_EMPLOYEES_BY_DEPARTMENT",
-        },
-        {
-          name: "View All Employees By Manager",
-          value: "VIEW_EMPLOYEES_BY_MANAGER",
-        },
-        {
           name: "Add Employee",
           value: "ADD_EMPLOYEE",
         },
@@ -75,10 +67,6 @@ async function loadQuestions() {
   switch (choice) {
     case "VIEW_EMPLOYEES":
       return viewEmployees();
-    case "VIEW_EMPLOYEES_BY_DEPARTMENT":
-      return viewEmployeesByDepartment();
-    case "VIEW_EMPLOYEES_BY_MANAGER":
-      return viewEmployeesByManager();
     case "ADD_EMPLOYEE":
       return addEmployee();
     case "REMOVE_EMPLOYEE":
@@ -104,48 +92,118 @@ async function loadQuestions() {
   }
 }
 
-async function viewDepartments() {
-  connection.query(`SELECT id, name FROM department`, async function (err, data){
-    if (err) {
-      console.log(err);
+async function viewEmployees() {
+  connection.query(
+    `SELECT id, first_name, last_name, role_id, manager_id FROM employee`,
+    async function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+      console.table(data);
+      loadQuestions();
     }
-    console.table(data);
-    loadQuestions();
-  });
+  );
+}
+
+async function addEmployee() {
+  connection.query(
+    `SELECT id, first_name, last_name FROM employee`,
+    async function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+      const roleChoices = data.map(({id, title}) => ({
+        name: title,
+        value: id,
+      }));
+      const managerChoices = data.map(({ id, first_name, last_name }) => ({
+        name: `${first_name} ${last_name}`,
+        value: id,
+      }));
+      const employee = await inquirer.prompt([
+        {
+          type: "input",
+          message: "Enter new employee first name",
+          name: "firstName",
+        },
+        {
+          type: "input",
+          message: "Enter new employee last name",
+          name: "lastName",
+        },
+        {
+          type: "list",
+          message: "Who is the role of this employee?",
+          name: "roleEmployee",
+          choices: roleChoices,
+        },
+        {
+          type: "list",
+          message: "Who is the manager of this employee?",
+          name: "managerEmployee",
+          choices: managerChoices,
+        },
+      ]);
+      let addEmployeeQuery = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES ('${employee.firstName}', '${employee.lastName}', '${employee.roleEmployee}', '${employee.managerEmployee}')`;
+      connection.query(addEmployeeQuery, function (err, data) {
+        if (err) {
+          console.log(err);
+        }
+      });
+      console.log(`Added ${employee.firstName} ${employee.lastName} to the employee list`);
+      loadQuestions();
+    }
+  );
+}
+
+async function viewDepartments() {
+  connection.query(
+    `SELECT id, name FROM department`,
+    async function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+      console.table(data);
+      loadQuestions();
+    }
+  );
 }
 
 async function addRole() {
-  connection.query(`SELECT name, id FROM department`, async function (err, data) {
-    if (err) {
-      console.log(err);
+  connection.query(
+    `SELECT name, id FROM department`,
+    async function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+      const departmentChoices = data.map(({ id, name }) => ({
+        name: name,
+        value: id,
+      }));
+      const role = await inquirer.prompt([
+        { type: "input", message: "Enter new role", name: "title" },
+        {
+          type: "input",
+          message: "What is the salary of this role?",
+          name: "salary",
+        },
+        {
+          type: "list",
+          message: "What department does this role belong to?",
+          name: "department_id",
+          choices: departmentChoices,
+        },
+      ]);
+      let addRoleQuery = `INSERT INTO role(title, salary, department_id) VALUES ('${role.title}', '${role.salary}', '${role.department_id}')`;
+      connection.query(addRoleQuery, function (err, data) {
+        if (err) {
+          console.log(err);
+        }
+      });
+      console.log(`Added ${role.title} to the database`);
+      loadQuestions();
     }
-    const departmentChoices = data.map(({ id, name }) => ({
-      name: name,
-      value: id
-    }));
-    const role = await inquirer.prompt([
-    { type: "input", message: "Enter new role", name: "title" },
-    {
-      type: "input",
-      message: "What is the salary of this role?",
-      name: "salary",
-    },
-    {
-      type: "list",
-      message: "What department does this role belong to?",
-      name: "department_id",
-      choices: departmentChoices,
-    },
-  ]);
-  let addRoleQuery = `INSERT INTO role(title, salary, department_id) VALUES ('${role.title}', '${role.salary}', '${role.department_id}')`;
-  connection.query(addRoleQuery, function (err, data) {
-    if (err) {
-      console.log(err);
-    }
-  });
-  console.log(`Added ${role.title} to the database`);
-  loadQuestions();
-  });
+  );
 }
 
 async function addDepartment() {
