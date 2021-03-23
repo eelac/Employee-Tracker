@@ -3,9 +3,9 @@ var mysql = require("mysql");
 require("console.table");
 const connection = require("./db/connection.js");
 
-questions();
+loadQuestions();
 
-async function questions() {
+async function loadQuestions() {
   const { choice } = await inquirer.prompt([
     {
       type: "list",
@@ -104,14 +104,65 @@ async function questions() {
   }
 }
 
-async function addDepartment() {
-  const { department } = await inquirer.prompt ([
-      {type: "input", message: "Enter department name", name: "department"}
+async function viewDepartments() {
+  connection.query(`SELECT id, name FROM department`, async function (err, data){
+    if (err) {
+      console.log(err);
+    }
+    console.table(data);
+    loadQuestions();
+  });
+}
+
+async function addRole() {
+  connection.query(`SELECT name, id FROM department`, async function (err, data) {
+    if (err) {
+      console.log(err);
+    }
+    const departmentChoices = data.map(({ id, name }) => ({
+      name: name,
+      value: id
+    }));
+    const role = await inquirer.prompt([
+    { type: "input", message: "Enter new role", name: "title" },
+    {
+      type: "input",
+      message: "What is the salary of this role?",
+      name: "salary",
+    },
+    {
+      type: "list",
+      message: "What department does this role belong to?",
+      name: "department_id",
+      choices: departmentChoices,
+    },
   ]);
-  let addDepartmentQuery = `INSERT INTO department(name) VALUES ('${department}')`
+  let addRoleQuery = `INSERT INTO role(title, salary, department_id) VALUES ('${role.title}', '${role.salary}', '${role.department_id}')`;
+  connection.query(addRoleQuery, function (err, data) {
+    if (err) {
+      console.log(err);
+    }
+  });
+  console.log(`Added ${role.title} to the database`);
+  loadQuestions();
+  });
+}
+
+async function addDepartment() {
+  const { department } = await inquirer.prompt([
+    { type: "input", message: "Enter new department name", name: "department" },
+  ]);
+  let addDepartmentQuery = `INSERT INTO department(name) VALUES ('${department}')`;
   connection.query(addDepartmentQuery, function (err, data) {
     if (err) {
-        console.log(err);
+      console.log(err);
     }
-});
+  });
+  console.log(`Added ${department} to the database`);
+  loadQuestions();
+}
+
+async function quit() {
+  console.log("Closing appliction");
+  process.exit();
 }
