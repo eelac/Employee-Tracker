@@ -71,10 +71,6 @@ async function loadQuestions() {
       return addEmployee();
     case "REMOVE_EMPLOYEE":
       return removeEmployee();
-    case "UPDATE_EMPLOYEE_ROLE":
-      return updateEmployeeRole();
-    case "UPDATE_EMPLOYEE_MANAGER":
-      return updateEmployeeManager();
     case "VIEW_DEPARTMENTS":
       return viewDepartments();
     case "ADD_DEPARTMENT":
@@ -112,7 +108,7 @@ async function addEmployee() {
       if (err) {
         console.log(err);
       }
-      role = await connection.query(`SELECT id, title FROM role`) 
+      role = await connection.query(`SELECT id, title FROM role`);
       const roleChoices = role.map(({ id, title }) => ({
         name: title,
         value: id,
@@ -178,8 +174,7 @@ async function removeEmployee() {
           choices: employeeChoices,
         },
       ]);
-      console.log(employee);
-      let removeEmployeeQuery = `DELETE FROM employee WHERE id = '${employee.employeeName}'`
+      let removeEmployeeQuery = `DELETE FROM employee WHERE id = '${employee.employeeName}'`;
       connection.query(removeEmployeeQuery, function (err, data) {
         if (err) {
           console.log(err);
@@ -203,10 +198,55 @@ async function viewDepartments() {
     }
   );
 }
- 
+
+async function addDepartment() {
+  const { department } = await inquirer.prompt([
+    { type: "input", message: "Enter new department name", name: "department" },
+  ]);
+  let addDepartmentQuery = `INSERT INTO department(name) VALUES ('${department}')`;
+  connection.query(addDepartmentQuery, function (err, data) {
+    if (err) {
+      console.log(err);
+    }
+  });
+  console.log(`Added ${department} to the database`);
+  loadQuestions();
+}
+
+async function removeDepartment() {
+  connection.query(
+    `SELECT id, name FROM department`,
+    async function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+      const allDepartments = data.map(({ id, name }) => ({
+        name: name,
+        value: id,
+      }));
+      const department = await inquirer.prompt([
+        {
+          type: "list",
+          name: "departmentName",
+          message: "Which department do you want to remove?",
+          choices: allDepartments,
+        },
+      ]);
+      let removeDepartment = `DELETE FROM department WHERE id = '${department.departmentName}'`;
+      connection.query(removeDepartment, function (err, data) {
+        if (err) {
+          console.log(err);
+        }
+      });
+      console.log(`Removed department from the database`);
+      loadQuestions();
+    }
+  );
+}
+
 async function addRole() {
   connection.query(
-    `SELECT name, id FROM department`,
+    `SELECT id, name FROM department`,
     async function (err, data) {
       if (err) {
         console.log(err);
@@ -241,18 +281,32 @@ async function addRole() {
   );
 }
 
-async function addDepartment() {
-  const { department } = await inquirer.prompt([
-    { type: "input", message: "Enter new department name", name: "department" },
-  ]);
-  let addDepartmentQuery = `INSERT INTO department(name) VALUES ('${department}')`;
-  connection.query(addDepartmentQuery, function (err, data) {
+async function removeRole() {
+  connection.query(`SELECT id, title FROM role`, async function (err, data) {
     if (err) {
       console.log(err);
     }
+    const roleChoices = data.map(({ id, title }) => ({
+      name: title,
+      value: id,
+    }));
+    const role = await inquirer.prompt([
+      {
+        type: "list",
+        name: "roleTitle",
+        message: "Which role do you want to remove?",
+        choices: roleChoices,
+      },
+    ]);
+    let removeRoleQuery = `DELETE FROM role WHERE id = '${role.roleTitle}'`;
+    connection.query(removeRoleQuery, function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+    });
+    console.log(`Removed role from database`);
+    loadQuestions();
   });
-  console.log(`Added ${department} to the database`);
-  loadQuestions();
 }
 
 async function quit() {
