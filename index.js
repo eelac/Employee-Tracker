@@ -112,7 +112,8 @@ async function addEmployee() {
       if (err) {
         console.log(err);
       }
-      const roleChoices = data.map(({id, title}) => ({
+      role = await connection.query(`SELECT id, title FROM role`) 
+      const roleChoices = role.map(({ id, title }) => ({
         name: title,
         value: id,
       }));
@@ -150,7 +151,41 @@ async function addEmployee() {
           console.log(err);
         }
       });
-      console.log(`Added ${employee.firstName} ${employee.lastName} to the employee list`);
+      console.log(
+        `Added ${employee.firstName} ${employee.lastName} to the employee list`
+      );
+      loadQuestions();
+    }
+  );
+}
+
+async function removeEmployee() {
+  connection.query(
+    `SELECT id, first_name, last_name FROM employee`,
+    async function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+      const employeeChoices = data.map(({ id, first_name, last_name }) => ({
+        name: `${first_name} ${last_name}`,
+        value: id,
+      }));
+      const employee = await inquirer.prompt([
+        {
+          type: "list",
+          name: "employeeName",
+          message: "Which employee do you want to remove?",
+          choices: employeeChoices,
+        },
+      ]);
+      console.log(employee);
+      let removeEmployeeQuery = `DELETE FROM employee WHERE id = '${employee.employeeName}'`
+      connection.query(removeEmployeeQuery, function (err, data) {
+        if (err) {
+          console.log(err);
+        }
+      });
+      console.log(`Removed employee from the database`);
       loadQuestions();
     }
   );
@@ -168,7 +203,7 @@ async function viewDepartments() {
     }
   );
 }
-
+ 
 async function addRole() {
   connection.query(
     `SELECT name, id FROM department`,
