@@ -25,14 +25,6 @@ async function loadQuestions() {
           value: "REMOVE_EMPLOYEE",
         },
         {
-          name: "Update Employee Role",
-          value: "UPDATE_EMPLOYEE_ROLE",
-        },
-        {
-          name: "Update Employee Manager",
-          value: "UPDATE_EMPLOYEE_MANAGER",
-        },
-        {
           name: "View All Roles",
           value: "VIEW_ROLES",
         },
@@ -242,6 +234,19 @@ async function removeDepartment() {
       loadQuestions();
     }
   );
+}
+
+async function viewRoles() {
+  connection.query(
+    `SELECT id, title FROM department`,
+    async function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+      console.table(data);
+      loadQuestions();
+    }
+  )
 }
 
 async function addRole() {
