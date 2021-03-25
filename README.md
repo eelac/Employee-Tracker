@@ -11,4 +11,4 @@ Run "node index.js" to get prompted to get options to edit your company informat
 
 ## Links
 [Github](https://github.com/eelac/Team-Profile-Geneartor)  
-[Video]()
+[Video](https://drive.google.com/file/d/1Z0j6bFymV0saOJ27C65Ae26C9m55Pg1A/view)
