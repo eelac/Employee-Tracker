@@ -238,7 +238,7 @@ async function removeDepartment() {
 
 async function viewRoles() {
   connection.query(
-    `SELECT id, title FROM department`,
+    `SELECT id, title FROM role`,
     async function (err, data) {
       if (err) {
         console.log(err);
